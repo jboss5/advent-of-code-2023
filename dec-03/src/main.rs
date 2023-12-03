@@ -18,20 +18,11 @@ fn p2(number_output: NumberOutput, filename: String) {
     let mut parts = Vec::<Vec<char>>::new();
     let mut stars = Vec::<Star>::new();
 
-    for l in lines {
-        let mut line = l.unwrap().to_owned();
-        line = line.trim().to_owned();
-        let mut depth = Vec::<char>::new();
-        for ch in line.chars() {
-            depth.push(ch);
-        }
-
-        parts.push(depth);
-    }
+    lines.for_each(|l| {
+        parts.push(l.unwrap().trim().to_owned().chars().collect());
+    });  
 
     for (i, item) in parts.iter().enumerate() {
-        let y: i32 = TryFrom::try_from(i).expect("NaN");
-
         for (i2, ch) in item.iter().enumerate() {
             if ch == &'*' {
                 stars.push(Star { y: i, x: i2, numbers: Vec::<Number>::new() });
@@ -42,13 +33,13 @@ fn p2(number_output: NumberOutput, filename: String) {
     let mut sum: u128 = 0;
     for star in stars {
         let mut found_parts = Vec::<Number>::new();
-        let star_x: i32 = TryFrom::try_from(star.x).expect("NaN");
-        let star_y: i32 = TryFrom::try_from(star.y).expect("NaN");
+        let star_x = star.x as i32;
+        let star_y = star.y as i32;
 
         for part in &number_output.out_numbers  {
-            let part_y: i32 = TryFrom::try_from(part.y).expect("NaN");
-            let part_end: i32 = TryFrom::try_from(part.end).expect("NaN");
-            let part_start: i32 = TryFrom::try_from(part.start).expect("NaN");
+            let part_y = part.y as i32;
+            let part_end = part.end as i32;
+            let part_start = part.start as i32;
 
             if part_y == star_y-1 || part_y == star_y+1 {
                 if star_x >= part_start-1 && star_x <= part_end+1 {
@@ -73,25 +64,18 @@ fn p1(filename: String) -> NumberOutput {
     let lines = get_lines(filename);
     let mut parts = Vec::<Vec<char>>::new();
 
-    for l in lines {
-        let mut line = l.unwrap().to_owned();
-        line = line.trim().to_owned();
-        let mut depth = Vec::<char>::new();
-        for ch in line.chars() {
-            depth.push(ch);
-        }
-
-        parts.push(depth);
-    }
+    lines.for_each(|l| {
+        parts.push(l.unwrap().trim().to_owned().chars().collect());
+    });  
 
     let mut out_parts = Vec::<Number>::new();
     for (i, item) in parts.iter().enumerate() {
         let mut is_part = false;
-        let y: i32 = TryFrom::try_from(i).expect("NaN");
+        let y = i as i32;
         let mut start_idx: usize = 0;
 
         for (i2, ch) in item.iter().enumerate() {
-            let x: i32 = TryFrom::try_from(i2).expect("NaN");
+            let x = i2 as i32;
             if !ch.is_numeric() { 
                 if is_part { 
                     let n = Number { y:i, start: start_idx, end: i2-1};
@@ -114,10 +98,9 @@ fn p1(filename: String) -> NumberOutput {
         }
 
         if is_part {
-            let n = Number { y:i, start: start_idx, end: item.len() };
-            out_parts.push(n); 
+            out_parts.push(Number { y:i, start: start_idx, end: item.len() }); 
         } else {
-            let x: i32 = TryFrom::try_from(item.len()).expect("NaN");
+            let x = item.len() as i32;
             if item[item.len()-1].is_numeric() {
                 if check_index(&parts,y-1,x) { is_part = true; }
                 if check_index(&parts,y+1,x) { is_part = true; }
@@ -126,20 +109,18 @@ fn p1(filename: String) -> NumberOutput {
                 if check_index(&parts, y, x-1) { is_part = true; }
     
                 if is_part {
-                    let n = Number { y:i, start: start_idx, end: item.len() };
-                    out_parts.push(n); 
+                    out_parts.push(Number { y:i, start: start_idx, end: item.len() }); 
                 }
             }
         }
     }
 
-    let mut sum: u64 = 0;
     let mut output = Vec::<u64>::new();
 
-    for out in &out_parts {
-        let v = parts.get(out.y).expect("OB");
+    out_parts.iter().for_each(|out| {
+        let v = &parts[out.y];
         let end = out.end.max(v.len());
-        let v2: Vec<char> = v[out.start..end].to_vec();            
+        let v2: Vec<char> = parts[out.y][out.start..end].to_vec();          
         let mut str = String::new();
 
         for (_i, ch) in v2.iter().enumerate() {
@@ -152,18 +133,14 @@ fn p1(filename: String) -> NumberOutput {
         }
 
         output.push(str.parse::<u64>().unwrap());
-    }
+    });
 
-    for num in output {
-        sum += num;
-    }
-
-    println!("Part 1: {}", sum);
+    println!("Part 1: {}", output.iter().sum::<u64>());
     NumberOutput { out_parts: parts, out_numbers: out_parts }
 }
 
 fn build_number(arr: &Vec<Vec<char>>, number: &Number) -> u64 {
-    let v = arr.get(number.y).expect("OB");
+    let v = &arr[number.y];
     let end = number.end.max(v.len());
     let v2: Vec<char> = v[number.start..end].to_vec();            
     let mut str = String::new();
@@ -186,9 +163,7 @@ fn is_char_symbol(ch: char) -> bool {
 
 fn check_index(arr: &Vec<Vec<char>>, y: i32, x: i32) -> bool {
     if y < 0 || x < 0 || y >= arr.len() as i32 || x >= arr[y as usize].len() as i32 { return false; }
-    let vec1 = arr.get(y as usize).expect("out of bounds");
-    let ch = vec1.get(x as usize).expect("out of bounds");
-    is_char_symbol(*ch)
+    is_char_symbol(arr[y as usize][x as usize])
 }
 
 #[derive(Copy, Clone)]
