@@ -1,7 +1,6 @@
 
 use std::fs::File;
 use std::io::{BufRead, BufReader, Lines};
-use std::ops::Range;
 
 #[derive(Debug,PartialEq)]
 enum Category {
@@ -12,8 +11,7 @@ enum Category {
     WaterToLight,
     LightToTemp,
     TempToHumdity,
-    HumidityToLocation,
-    None
+    HumidityToLocation
 }
 
 #[derive(Debug)]
@@ -50,7 +48,6 @@ fn tokenize(line: &str) -> SeedMap {
 }
 
 fn compute_offset(map: &Vec<SeedMap>, src: u64) -> u64 {
-    // println!("src: {}, seedmap: {:?}", src, map);
     for item in map {
         let src_range = item.src..(item.src+item.offset);
 
@@ -104,8 +101,7 @@ fn main() {
                 Category::WaterToLight => { water_to_light.push(tokenize(&line)); },
                 Category::LightToTemp => { light_to_temp.push(tokenize(&line)); },
                 Category::TempToHumdity => { temp_to_humd.push(tokenize(&line)); },
-                Category::HumidityToLocation => { humd_to_location.push(tokenize(&line)); },
-                _ => panic!("invalid category")
+                Category::HumidityToLocation => { humd_to_location.push(tokenize(&line)); }
             }
 
             if lines.peek().is_some() { line = lines.next().expect("Error reading line2").unwrap(); }
@@ -113,16 +109,6 @@ fn main() {
         }
     }
 
-    // println!("seed list: {:?}", seed_list);
-    // println!("SeedToSoil list: {:?}", seed_to_soil);
-    // println!("SoilToFertilizer list: {:?}", soil_to_fert);
-    // println!("FertilizerToWater list: {:?}", fert_to_water);
-    // println!("WaterToLight list: {:?}", water_to_light);
-    // println!("LightToTemp list: {:?}", light_to_temp);
-    // println!("TempToHumdity list: {:?}", temp_to_humd);
-    // println!("HumidityToLocation list: {:?}", humd_to_location);
-
-    // let mut loc_values = Vec::<u64>::new();
     let mut min_loc = u64::MAX;
 
     for seed in seed_list_p1 {
@@ -133,14 +119,11 @@ fn main() {
         let temp = compute_offset(&light_to_temp, light);
         let hum = compute_offset(&temp_to_humd, temp);
         let loc = compute_offset(&humd_to_location, hum);
-        
-        // println!("loc: {}", loc);
         min_loc = min_loc.min(loc);
     }
 
     println!("lowest loc: {}", min_loc);
     min_loc = u64::MAX;
-    // println!("\nseed list2 {:?}", seed_list_p2);
 
     for seed in seed_list_p2 {
         let soil = compute_offset(&seed_to_soil, seed);
