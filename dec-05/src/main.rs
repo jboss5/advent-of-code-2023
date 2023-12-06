@@ -1,6 +1,9 @@
 
 use std::fs::File;
 use std::io::{BufRead, BufReader, Lines};
+use std::sync::atomic::AtomicU64;
+
+use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
 #[derive(Debug,PartialEq)]
 enum Category {
@@ -109,9 +112,9 @@ fn main() {
         }
     }
 
-    let mut min_loc = u64::MAX;
+    let mut min_loc = AtomicU64::new(u64::MAX);
 
-    for seed in seed_list_p1 {
+    seed_list_p1.into_par_iter().for_each(|seed| {
         let soil = compute_offset(&seed_to_soil, seed);
         let fert = compute_offset(&soil_to_fert, soil);
         let water = compute_offset(&fert_to_water, fert);
@@ -119,13 +122,13 @@ fn main() {
         let temp = compute_offset(&light_to_temp, light);
         let hum = compute_offset(&temp_to_humd, temp);
         let loc = compute_offset(&humd_to_location, hum);
-        min_loc = min_loc.min(loc);
-    }
+        min_loc.fetch_min(loc, std::sync::atomic::Ordering::Relaxed);
+    });
 
-    println!("lowest loc: {}", min_loc);
-    min_loc = u64::MAX;
+    println!("lowest loc: {}", min_loc.get_mut());
+    min_loc = AtomicU64::new(u64::MAX);
 
-    for seed in seed_list_p2 {
+    seed_list_p2.into_par_iter().for_each(|seed|{
         let soil = compute_offset(&seed_to_soil, seed);
         let fert = compute_offset(&soil_to_fert, soil);
         let water = compute_offset(&fert_to_water, fert);
@@ -133,10 +136,9 @@ fn main() {
         let temp = compute_offset(&light_to_temp, light);
         let hum = compute_offset(&temp_to_humd, temp);
         let loc = compute_offset(&humd_to_location, hum);
-        
-        min_loc = min_loc.min(loc);
-    }
+        min_loc.fetch_min(loc, std::sync::atomic::Ordering::Relaxed);
+    });
 
-    println!("lowest loc: {}", min_loc);
+    println!("lowest loc: {}", min_loc.get_mut());
 }
 
