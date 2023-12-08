@@ -1,6 +1,7 @@
 
 use core::fmt;
 use std::collections::HashMap;
+use std::cmp::Ordering;
 
 #[derive(Debug,PartialEq,Copy,Clone)]
 pub enum HandType {
@@ -29,6 +30,50 @@ impl fmt::Display for HandType {
 impl fmt::Display for Hand {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{:?}", self)
+    }
+}
+
+impl Hand {
+    pub const fn new(hand_type: HandType, cards: Vec<u32>, bid: u32) -> Self {
+        Hand { hand_type, cards, bid }
+    }
+}
+
+impl Eq for Hand { }
+
+impl PartialEq for Hand {
+    fn eq(&self, h2: &Self) -> bool {
+        self.bid == h2.bid && self.cards.eq(&h2.cards) && self.hand_type == h2.hand_type
+    }
+}
+
+impl PartialOrd for Hand {
+    fn partial_cmp(&self, h2: &Self) -> Option<Ordering> {
+        Some(self.cmp(h2))
+    }
+}
+
+impl Ord for Hand {
+    fn cmp(&self, h2: &Self) -> Ordering {
+        if self.hand_type != h2.hand_type {
+            match self.hand_type {
+                HandType::FivOk => Ordering::Greater,
+                HandType::FourOk => if h2.hand_type != HandType::FivOk { Ordering::Greater } else { Ordering::Less },
+                HandType::FullHouse => if h2.hand_type != HandType::FivOk && h2.hand_type != HandType::FourOk { Ordering::Greater } else { Ordering::Less },
+                HandType::ThreeOk => if h2.hand_type != HandType::FivOk && h2.hand_type != HandType::FourOk && h2.hand_type != HandType::FullHouse { Ordering::Greater } else { Ordering::Less },
+                HandType::TP => if h2.hand_type != HandType::OP && h2.hand_type != HandType::HC { Ordering::Less } else { Ordering::Greater},
+                HandType::OP => if h2.hand_type != HandType::HC { Ordering::Less } else { Ordering::Greater },
+                HandType::HC => std::cmp::Ordering::Less
+            }
+        } else {
+            for (i, val) in self.cards.iter().enumerate() {
+                if *val == h2.cards[i] { continue; }
+                if *val > h2.cards[i] { return Ordering::Greater; }
+                return Ordering::Less;
+            }
+    
+            panic!("totally equal, can this happen?");
+        }
     }
 }
 
@@ -90,16 +135,5 @@ pub fn compute_type(cards: &[u32]) -> HandType {
             if map.contains_key(&joker) { HandType::OP }
             else { HandType::HC }
         }
-    }
-}
-
-impl Hand {
-
-    pub const fn new(hand_type: HandType, cards: Vec<u32>, bid: u32) -> Self {
-        Hand { hand_type, cards, bid }
-    }
-
-    pub fn print(&self) {
-        println!("cards: {:?}", self.cards);
     }
 }
