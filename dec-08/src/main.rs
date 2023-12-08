@@ -3,8 +3,6 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::io::{BufRead, BufReader, Lines};
 
-use num_integer::Integer;
-
 fn get_lines(filename: String) -> Lines<BufReader<File>> {
     BufReader::new(File::open(filename).expect("Error opening file")).lines()
 }
@@ -52,28 +50,15 @@ fn find_steps_to_z(dest_map: &HashMap<String, Vec<String>>, start: &String, path
     idx as u32
 }
 
-fn find_lcm(nums: Vec<u64>) -> u64 {
-    println!("nums: {:?}", nums);
-    match nums.len() {
-        1 => nums[0],
-        _ => nums[0].lcm(&find_lcm(nums[1..nums.len()].to_vec()))
-    }
-}
-
 fn p2(input: &Input) -> u64 {
     let starts: Vec<_> = input.maps.keys()
         .filter(|k| k.ends_with('A'))
         .collect();
 
     println!("starts: {:?}", &starts);
-    let mut nums = vec![];
-    for current in starts {
-        let num = find_steps_to_z(&input.maps, current, &input.path);
-        nums.push(num as u64);
-        println!("item: {current}, steps: {num}");
-    }
-
-    find_lcm(nums)
+    starts.iter()
+        .map(|current| find_steps_to_z(&input.maps, current, &input.path) as u64)
+        .fold(1, num_integer::lcm)
 }
 
 struct Input {
