@@ -21,7 +21,6 @@ fn contains_all_zeroes(list: &Vec<i64>) -> bool {
 }
 
 fn runit(filename: &String) -> Output {
-
     let mut out = Output { p1: 0, p2: 0 };
     for l in get_lines(filename) {
         let line = l.unwrap();
@@ -30,8 +29,7 @@ fn runit(filename: &String) -> Output {
             .collect();
 
         let mut diff_list: Vec<i64> = vec![1; 1];
-        let mut tracker: Vec<Vec<i64>> = Vec::new();
-        tracker.push(history);
+        let mut tracker: Vec<Vec<i64>> = vec![history];
 
         while !contains_all_zeroes(&diff_list) {
             let current = tracker.last().expect("array error");
